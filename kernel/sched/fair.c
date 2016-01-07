@@ -1231,9 +1231,9 @@ struct hmp_global_attr {
 };
 
 #ifdef CONFIG_HMP_FREQUENCY_INVARIANT_SCALE
-#define HMP_DATA_SYSFS_MAX 17
+#define HMP_DATA_SYSFS_MAX 14
 #else
-#define HMP_DATA_SYSFS_MAX 16
+#define HMP_DATA_SYSFS_MAX 13
 #endif
 
 struct hmp_data_struct {
@@ -1587,7 +1587,7 @@ static inline void __update_group_entity_contrib(struct sched_entity *se) {}
  */
 
 unsigned int hmp_up_threshold = 870;
-unsigned int hmp_down_threshold = 512;
+unsigned int hmp_down_threshold = 256;
 
 unsigned int hmp_semiboost_up_threshold = 400;
 unsigned int hmp_semiboost_down_threshold = 150;
@@ -1905,6 +1905,12 @@ static void check_spread(struct cfs_rq *cfs_rq, struct sched_entity *se)
 #endif
 }
 
+static unsigned int Lgentle_fair_sleepers = 0;
+void relay_gfs(unsigned int gfs)
+{
+	Lgentle_fair_sleepers = gfs;
+}
+
 static void
 place_entity(struct cfs_rq *cfs_rq, struct sched_entity *se, int initial)
 {
@@ -1927,7 +1933,7 @@ place_entity(struct cfs_rq *cfs_rq, struct sched_entity *se, int initial)
 		 * Halve their sleep time's effect, to allow
 		 * for a gentler effect of sleepers:
 		 */
-		if (sched_feat(GENTLE_FAIR_SLEEPERS))
+		if (Lgentle_fair_sleepers)
 			thresh >>= 1;
 
 		vruntime -= thresh;
@@ -4226,6 +4232,7 @@ static int hmp_aggressive_yield_from_sysfs(int value)
 	raw_spin_unlock_irqrestore(&hmp_sysfs_lock, flags);
 
 	return ret;
+}
 
 static int hmp_fork_migrate_big_from_sysfs(int value)
 {
@@ -4245,8 +4252,6 @@ static int hmp_fork_migrate_big_from_sysfs(int value)
 	raw_spin_unlock_irqrestore(&hmp_sysfs_lock, flags);
 
 	return ret;
-}
-
 }
 
 int set_hmp_boost(int enable)
@@ -4580,7 +4585,7 @@ select_task_rq_fair(struct task_struct *p, int sd_flag, int wake_flags)
 
 #ifdef CONFIG_SCHED_HMP
 	/* always put non-kernel forking tasks on a big domain */
-	if (hmp_fork_migrate_big && (sd_flag & SD_BALANCE_FORK)) {
+	if (hmp_fork_migrate_big && p->mm && (sd_flag & SD_BALANCE_FORK)) {
 		new_cpu = hmp_select_faster_cpu(p, prev_cpu);
 		if (new_cpu != NR_CPUS) {
 			hmp_next_up_delay(&p->se, new_cpu);
@@ -4590,7 +4595,7 @@ select_task_rq_fair(struct task_struct *p, int sd_flag, int wake_flags)
 		new_cpu = cpu;
 	}
 #endif	
-
+	
 	if (sd_flag & SD_BALANCE_WAKE) {
 		if (cpumask_test_cpu(cpu, tsk_cpus_allowed(p)))
 			want_affine = 1;
