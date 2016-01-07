@@ -410,3 +410,15 @@ IF SOMETHING GOES WRONG:
    gdb'ing a non-running kernel currently fails because gdb (wrongly)
    disregards the starting offset for which the kernel is compiled.
 
+-----------------------------------------------------------------------------
+How to build kernel with ccache?
+1. install ccache with terminal (sudo apt-get install ccache)
+2. edit bash (sudo gedit ~/.bashrc and add export PATH="/usr/lib/ccache:$PATH")
+3. make symboic link (cd /usr/lib/ccache
+			sudo ln -s ../../bin/ccache powerpc-tuxbox-linux-gnu-cc
+			sudo ln -s ../../bin/ccache powerpc-tuxbox-linux-gnu-c++
+			sudo ln -s ../../bin/ccache powerpc-tuxbox-linux-gnu-gcc
+			sudo ln -s ../../bin/ccache powerpc-tuxbox-linux-gnu-g++)
+4. check (ccache -s)
+								credited by mir
+
