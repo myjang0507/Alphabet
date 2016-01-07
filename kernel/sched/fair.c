@@ -4292,6 +4292,11 @@ int set_hmp_aggressive_yield(int enable)
 	return hmp_aggressive_yield_from_sysfs(enable);
 }
 
+int set_hmp_fork_migrate_big(int enable)
+{
+	return hmp_fork_migrate_big_from_sysfs(enable);
+}
+
 int get_hmp_boost(void)
 {
 	return hmp_boost();
